@@ -1,0 +1,42 @@
+# Build outputs
+/bin/
+/obj/
+tools/*/bin/
+tools/*/obj/
+dist/
+artifacts/
+*.zip
+*.7z
+*.7z.*
+*.exe
+!portable_config/scripts/uosc/bin/ziggy-windows.exe
+*.dll
+*.pdb
+__pycache__/
+*.pyc
+
+# Runtime bundles belong in GitHub Releases, not in the source repository.
+mpv.exe
+mpv.com
+mpv-h.exe
+ffmpeg.exe
+yt-dlp.exe
+d3dcompiler_*.dll
+VapourSynth/
+doc/manual.pdf
+
+# Runtime/generated mpv data
+portable_config/cache/
+portable_config/watch_later/
+portable_config/restore/
+portable_config/state/
+portable_config/vs/engines/
+*.engine
+*.engine.cache
+
+# Local editor and OS noise
+.vs/
+.vscode/
+Desktop.ini
+Thumbs.db
+*.log
