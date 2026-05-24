@@ -116,6 +116,49 @@ function New-ReleaseManifest {
         Set-Content -Encoding UTF8 -LiteralPath $manifestPath
 }
 
+function Invoke-GitText {
+    param([Parameter(Mandatory=$true)][string[]]$Arguments)
+
+    try {
+        $output = @(& git @Arguments 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $output.Count -gt 0) {
+            return ($output -join "`n").Trim()
+        }
+    } catch {
+    }
+
+    return "unknown"
+}
+
+function New-SourceCommitFile {
+    param(
+        [Parameter(Mandatory=$true)][string]$Root,
+        [Parameter(Mandatory=$true)][string]$Version
+    )
+
+    $head = Invoke-GitText -Arguments @("-C", $repoRoot, "rev-parse", "HEAD")
+    $shortHead = Invoke-GitText -Arguments @("-C", $repoRoot, "rev-parse", "--short", "HEAD")
+    $describe = Invoke-GitText -Arguments @("-C", $repoRoot, "describe", "--tags", "--always", "--dirty")
+    $status = Invoke-GitText -Arguments @("-C", $repoRoot, "status", "--short")
+
+    if ([string]::IsNullOrWhiteSpace($status)) {
+        $status = "clean"
+    }
+
+    $content = @(
+        "mpv-h source commit",
+        "",
+        "Package version: $Version",
+        "Generated at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz')",
+        "Source commit: $head",
+        "Short source commit: $shortHead",
+        "Git describe: $describe",
+        "Git status: $status"
+    )
+
+    Set-Content -Encoding UTF8 -LiteralPath (Join-Path $Root "SOURCE-COMMIT.txt") -Value $content
+}
+
 function Invoke-TextCommand {
     param(
         [Parameter(Mandatory=$true)][string]$FilePath,
@@ -303,6 +346,7 @@ foreach ($dir in $runtimeDirs) {
 Remove-PackageJunk -Root $stageRoot
 Test-ReleasePackage -Root $stageRoot
 New-RuntimeVersions -Root $stageRoot -RuntimeRoot $runtimePath -Version $packageVersion
+New-SourceCommitFile -Root $stageRoot -Version $packageVersion
 New-ReleaseManifest -Root $stageRoot
 
 Get-ChildItem -LiteralPath $distRoot -File -Force |

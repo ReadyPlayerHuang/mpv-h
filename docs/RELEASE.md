@@ -126,10 +126,11 @@ It also writes:
 
 ```text
 RUNTIME-VERSIONS.txt
+SOURCE-COMMIT.txt
 RELEASE-MANIFEST.txt
 ```
 
-`RUNTIME-VERSIONS.txt` is a human-readable runtime version summary. `RELEASE-MANIFEST.txt` contains SHA-256 hashes for packaged files.
+`RUNTIME-VERSIONS.txt` is a human-readable runtime version summary. `SOURCE-COMMIT.txt` records the Git commit used to generate the staged package. `RELEASE-MANIFEST.txt` contains SHA-256 hashes for packaged files.
 
 `trtexec.exe` is intentionally removed from public Release packages. NVIDIA documents `trtexec` as a TensorRT command-line tool, and mpv-h does not redistribute it. Users who want RIFE first-time engine generation must download TensorRT from NVIDIA and copy `bin\trtexec.exe` into the packaged `vsmlrt-cuda` directory.
 
@@ -171,6 +172,24 @@ mpv-h-2026.05.23-full.README.txt
 Users should download every `.7z.*` part into the same folder, then extract the `.7z.001` file with 7-Zip.
 
 ## Version Naming
+
+## Release Tag Rule
+
+The Release tag must point to the exact commit used to generate the uploaded package.
+
+Use this order:
+
+1. Merge the release-ready code to `main`.
+2. Confirm `git status` has no tracked changes.
+3. Build and validate the package from that exact `main` commit.
+4. Confirm `git rev-parse HEAD` has not changed after packaging.
+5. Create the annotated tag on that commit.
+6. Push `main` and the tag.
+7. Create the GitHub Release from that tag and upload the generated assets.
+
+Do not edit tracked files between package generation and tag creation. If a tracked file changes, commit it first and rebuild the package before tagging.
+
+The generated package includes `SOURCE-COMMIT.txt`; use it to verify which source commit produced a Release asset.
 
 Use date-based tags while this remains a personal distribution:
 
