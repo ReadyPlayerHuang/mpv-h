@@ -119,11 +119,15 @@ The launcher can be rebuilt with the Windows .NET Framework C# compiler:
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-Launcher.ps1
 ```
 
-The full Release package can be built from the sibling `mpv` runtime directory:
+The repository root is also the local runnable mpv-h directory. Runtime binaries such as `mpv.exe`, `ffmpeg.exe`, `yt-dlp.exe`, and `VapourSynth/` live next to the tracked `portable_config/` but are ignored by Git.
+
+The full Release package can be built directly from the repository root:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\New-ReleasePackage.ps1 -Version 2026.05.23
 ```
+
+Keep these root-level runtime files separate from any personal mpv installation. `portable_config/` in this repository remains the source of mpv-h configuration.
 
 More details are in [docs/RELEASE.md](docs/RELEASE.md).
 

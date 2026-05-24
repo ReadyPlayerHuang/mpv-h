@@ -12,7 +12,11 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $distRoot = Join-Path $repoRoot "dist"
 
 if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) {
-    $RuntimeRoot = Join-Path (Split-Path -Parent $repoRoot) "mpv"
+    $RuntimeRoot = $repoRoot
+}
+
+if (-not (Test-Path -LiteralPath $RuntimeRoot -PathType Container)) {
+    throw "Runtime root was not found: $RuntimeRoot. Put the mpv-h release runtime in the repository root, or pass -RuntimeRoot."
 }
 
 $runtimePath = (Resolve-Path -LiteralPath $RuntimeRoot).Path
@@ -110,6 +114,49 @@ function New-ReleaseManifest {
             "{0}  {1}" -f $hash.Hash, $relative
         } |
         Set-Content -Encoding UTF8 -LiteralPath $manifestPath
+}
+
+function Invoke-GitText {
+    param([Parameter(Mandatory=$true)][string[]]$Arguments)
+
+    try {
+        $output = @(& git @Arguments 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $output.Count -gt 0) {
+            return ($output -join "`n").Trim()
+        }
+    } catch {
+    }
+
+    return "unknown"
+}
+
+function New-SourceCommitFile {
+    param(
+        [Parameter(Mandatory=$true)][string]$Root,
+        [Parameter(Mandatory=$true)][string]$Version
+    )
+
+    $head = Invoke-GitText -Arguments @("-C", $repoRoot, "rev-parse", "HEAD")
+    $shortHead = Invoke-GitText -Arguments @("-C", $repoRoot, "rev-parse", "--short", "HEAD")
+    $describe = Invoke-GitText -Arguments @("-C", $repoRoot, "describe", "--tags", "--always", "--dirty")
+    $status = Invoke-GitText -Arguments @("-C", $repoRoot, "status", "--short")
+
+    if ([string]::IsNullOrWhiteSpace($status)) {
+        $status = "clean"
+    }
+
+    $content = @(
+        "mpv-h source commit",
+        "",
+        "Package version: $Version",
+        "Generated at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz')",
+        "Source commit: $head",
+        "Short source commit: $shortHead",
+        "Git describe: $describe",
+        "Git status: $status"
+    )
+
+    Set-Content -Encoding UTF8 -LiteralPath (Join-Path $Root "SOURCE-COMMIT.txt") -Value $content
 }
 
 function Invoke-TextCommand {
@@ -279,11 +326,11 @@ foreach ($file in $runtimeFiles) {
     Copy-IfExists -Source (Join-Path $runtimePath $file) -Destination $stageRoot
 }
 
-$launcher = Join-Path $repoRoot "artifacts\launcher\mpv-h.exe"
+$launcher = Join-Path $runtimePath "mpv-h.exe"
 if (Test-Path -LiteralPath $launcher) {
     Copy-Item -LiteralPath $launcher -Destination $stageRoot -Force
 } else {
-    Copy-IfExists -Source (Join-Path $runtimePath "mpv-h.exe") -Destination $stageRoot
+    Copy-IfExists -Source (Join-Path $repoRoot "artifacts\launcher\mpv-h.exe") -Destination $stageRoot
 }
 
 $runtimeDirs = @(
@@ -299,6 +346,7 @@ foreach ($dir in $runtimeDirs) {
 Remove-PackageJunk -Root $stageRoot
 Test-ReleasePackage -Root $stageRoot
 New-RuntimeVersions -Root $stageRoot -RuntimeRoot $runtimePath -Version $packageVersion
+New-SourceCommitFile -Root $stageRoot -Version $packageVersion
 New-ReleaseManifest -Root $stageRoot
 
 Get-ChildItem -LiteralPath $distRoot -File -Force |
