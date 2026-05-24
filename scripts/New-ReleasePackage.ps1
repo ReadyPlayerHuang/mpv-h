@@ -12,7 +12,11 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $distRoot = Join-Path $repoRoot "dist"
 
 if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) {
-    $RuntimeRoot = Join-Path (Split-Path -Parent $repoRoot) "mpv"
+    $RuntimeRoot = $repoRoot
+}
+
+if (-not (Test-Path -LiteralPath $RuntimeRoot -PathType Container)) {
+    throw "Runtime root was not found: $RuntimeRoot. Put the mpv-h release runtime in the repository root, or pass -RuntimeRoot."
 }
 
 $runtimePath = (Resolve-Path -LiteralPath $RuntimeRoot).Path
@@ -279,11 +283,11 @@ foreach ($file in $runtimeFiles) {
     Copy-IfExists -Source (Join-Path $runtimePath $file) -Destination $stageRoot
 }
 
-$launcher = Join-Path $repoRoot "artifacts\launcher\mpv-h.exe"
+$launcher = Join-Path $runtimePath "mpv-h.exe"
 if (Test-Path -LiteralPath $launcher) {
     Copy-Item -LiteralPath $launcher -Destination $stageRoot -Force
 } else {
-    Copy-IfExists -Source (Join-Path $runtimePath "mpv-h.exe") -Destination $stageRoot
+    Copy-IfExists -Source (Join-Path $repoRoot "artifacts\launcher\mpv-h.exe") -Destination $stageRoot
 }
 
 $runtimeDirs = @(

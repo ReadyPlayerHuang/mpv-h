@@ -119,11 +119,15 @@ LICENSES/               第三方许可证文本
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-Launcher.ps1
 ```
 
-从同级 `mpv` 运行时目录构建完整 Release 包：
+仓库根目录本身也是本地可运行的 mpv-h 目录。`mpv.exe`、`ffmpeg.exe`、`yt-dlp.exe`、`VapourSynth/` 等运行时文件和被 Git 管理的 `portable_config/` 放在同一层，但这些运行时文件会被 Git 忽略。
+
+可以直接从仓库根目录构建完整 Release 包：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\New-ReleasePackage.ps1 -Version 2026.05.23
 ```
+
+请把这些根目录运行时文件作为 mpv-h 专用环境，不要和个人日常使用的 mpv 环境混用。本仓库的 `portable_config/` 仍然是 mpv-h 配置的唯一来源。
 
 更多细节见 [docs/RELEASE.md](docs/RELEASE.md)。
 

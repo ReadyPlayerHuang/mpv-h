@@ -22,8 +22,10 @@ mpv-h.exe
 ffmpeg.exe
 yt-dlp.exe
 d3dcompiler_*.dll
+updater.bat
 VapourSynth/
-doc/manual.pdf
+mpv/
+doc/
 
 # Runtime/generated mpv data
 portable_config/cache/
